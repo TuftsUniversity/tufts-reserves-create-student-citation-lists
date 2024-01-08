@@ -7,11 +7,18 @@ sys.path.append('config/')
 import secrets_local
 import glob
 import json
+import os
 
 import sys
 # # Initialize Tkinter and hide the main window
 # Tk().withdraw()
+oDir = "./Output"
+if not os.path.isdir(oDir) or not os.path.exists(oDir):
+    os.makedirs(oDir)
 
+# pDir = "./Processing"
+# if not os.path.isdir(pDir) or not os.path.exists(pDir):
+#     os.makedirs(pDir)
 
 bnf_files = glob.glob('Barnes and Noble/*', recursive = True)
 
@@ -92,7 +99,9 @@ for index, row in merged_df.iterrows():
     emails = []
     names = []
     identifiers = []
-    # print(json.dumps(response))
+    response = json.dumps(response)
+    response = json.loads(response)
+
     if len(instructors) > 0:
         for instructor in instructors:
             name = instructor['last_name'] + ", " + instructor['first_name']
@@ -104,7 +113,9 @@ for index, row in merged_df.iterrows():
 
             for email in response_user['contact_info']['email']:
 
+                print(email)
                 if email['preferred'] == True:
+
                     emails.append(email['email_address'])
 
                     print(email['email_address'])
@@ -120,6 +131,8 @@ for index, row in merged_df.iterrows():
 
     #merged_df.loc[index, 'identifiers'] = "; ".join(identifiers)
     merged_df.loc[index, 'instructors'] = "; ".join(names)
+    merged_df.loc[index, 'identifiers'] = "; ".join(identifiers)
+    merged_df.loc[index, 'emails'] = "; ".join(emails)
     # print(merged_df.columns)
 
 
