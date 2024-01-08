@@ -8,6 +8,7 @@ This script takes input from Barnes and Noble reading lists supplied by the book
 
 **Method**
 Matching is done between reserves and the Barnes and Noble list via ISBN-13, and it also parses the course in separate fields in the Barnes and Noble list into a Tufts-specific Alma course code  It also gets concurrent users license information, "seats", from the Alma SRU for Tufts
+
 **Output**
 It merges and parses all this data to create
 - an output file with
