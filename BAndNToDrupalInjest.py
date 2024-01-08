@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 import pandas as pd
 # from tkinter import Tk
 # from tkinter.filedialog import askopenfilename
@@ -8,13 +9,17 @@ import secrets_local
 import glob
 import json
 import os
-
+import xml.etree.ElementTree as et
 import sys
 # # Initialize Tkinter and hide the main window
 # Tk().withdraw()
 oDir = "./Output"
 if not os.path.isdir(oDir) or not os.path.exists(oDir):
     os.makedirs(oDir)
+
+pDir = "./Alma and Barnes and Noble Merged"
+if not os.path.isdir(pDir) or not os.path.exists(pDir):
+    os.makedirs(pDir)
 
 # pDir = "./Processing"
 # if not os.path.isdir(pDir) or not os.path.exists(pDir):
@@ -140,10 +145,57 @@ for index, row in merged_df.iterrows():
     x += 1
 
 print(merged_df)
+merged_df.to_excel('Alma and Barnes and Noble Merged/Merged Data for Reading List File Ingest with Instructors.xlsx', index=False)
 
-sys.exit()
+# sys.exit()
 sru_url = "https://tufts.alma.exlibrisgroup.com/view/sru/01TUN_INST?version=1.2&operation=searchRetrieve&recordSchema=marcxml&query=alma.mms_id="
 namespaces = {'ns1': 'http://www.loc.gov/MARC21/slim'}
 
 
 api_key = secrets_local.prod_courses_api_key
+
+def create_primo_citation_link(mms_id):
+    # Assuming a similar structure to the provided output file's links
+    return f"https://tufts.primo.exlibrisgroup.com/discovery/fulldisplay?docid=alma{mms_id}&context=L&vid=01TUN_INST:01TUN"
+
+# Process the input file and create the output file
+output_columns = ['processing_department', 'course_code', 'course_name', 'course_section',
+                  'primo_citation_link', 'mms_id', 'format', 'title', 'isbn', 'usage_restriction']
+
+# Creating a DataFrame for the output
+output_df = pd.DataFrame(columns=output_columns)
+
+for index, row in merged_df.iterrows():
+    # Map the fields from input to output
+
+    result = requests.get(sru_url + row['MMS ID'])
+    tree_bib_record = et.ElementTree(et.fromstring(result.content.decode('utf-8')))
+    root_bib_record = tree_bib_record.getroot()
+
+    try:
+        usage_restriction = root_bib_record.findall(".//ns1:datafield[@tag='AVE']/ns1:subfield[@code='n']", namespaces)[0]
+        usage_restriction = usage_restriction.text
+    except:
+        usage_restriction = ""
+    output_row = {
+        'processing_department': 'Tisch Reserves',  # Placeholder value
+        'course_code': row['course_code'],
+        'course_name': row['course_name'],
+        'course_section': row['section'],
+
+        'primo_citation_link': create_primo_citation_link(row['MMS ID']),
+        'mms_id': row['MMS ID'],
+        'format': 'Electronic',  # Placeholder value
+        'title': row['Title_y'],
+        'isbn': row['EAN-13'],
+        'usage_restriction': usage_restriction,  # Assuming ISBN is EAN-13
+        'instructor': row['instructors'],
+        'identifiers': row['identifiers'],
+        'emails': row['emails']
+    }
+    output_df = pd.concat([output_df, pd.DataFrame(output_row, index=[0])])
+
+# Saving the output file
+
+
+output_df.to_excel("Output/8Data-primo output.xlsx", index=False)
