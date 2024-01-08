@@ -12,10 +12,10 @@ Matching is done between reserves and the Barnes and Noble list via ISBN-13, and
 **Output**
 It merges and parses all this data to create
 - an output file with
- - Primo link
- - course information
- - seats (concurrent license use)
- - instructor information including contact
+  - Primo link
+  - course information
+  - seats (concurrent license use)
+  - instructor information including contact
 
 **Use**
 - install requirements by
